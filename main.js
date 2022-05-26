@@ -1,6 +1,6 @@
 const { Player } = require('discord-player');
 const { Client, Intents, Collection } = require('discord.js');
-const fs = require('fs');
+const { readdirSync } = require('fs');
 
 let client = new Client({
     intents: [
@@ -8,83 +8,62 @@ let client = new Client({
         Intents.FLAGS.GUILD_MEMBERS,
         Intents.FLAGS.GUILD_MESSAGES,
         Intents.FLAGS.GUILD_VOICE_STATES
-    ]
-})
+    ],
+    disableMentions: 'everyone',
+});
 
-client.db = require("croxydb")
 client.config = require('./config');
 client.player = new Player(client, client.config.opt.discordPlayer);
+client.commands = new Collection();
 const player = client.player
 
-const mongoose = require("mongoose");
-var database = require("./DATABASE/mongodb.js");
-mongoose.connect(client.config.mongoDB, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-    }).then(() => {
-        console.log(`Connected MongoDB`);
-    }).catch((err) => {
-        return console.log("MongoDB Error: " + err);
-    })
-
-client.mdb = database
-
-const synchronizeSlashCommands = require('discord-sync-commands-v14');
-client.commands = new Collection();
-fs.readdir("./commands/", (_err, files) => {
-    files.forEach((file) => {
-        if (!file.endsWith(".js")) return;
-        let props = require(`./commands/${file}`);
-        let commandName = file.split(".")[0];
-        client.commands.set(commandName, {
-            name: commandName,
-            ...props
-        });
-        console.log(`👌 Loadded Slash Command: ${commandName}`);
-    });
-    synchronizeSlashCommands(client, client.commands.map((c) => ({
-        name: c.name,
-        description: c.description,
-        options: c.options,
-        type: 'CHAT_INPUT'
-    })), {
-        debug: false
-    });
+const events = readdirSync('./events/').filter(file => file.endsWith('.js'));
+for (const file of events) {
+    const event = require(`./events/${file}`);
+    console.log(`-> Loaded event ${file.split('.')[0]}`);
+    client.on(file.split('.')[0], event.bind(null, client));
+    delete require.cache[require.resolve(`./events/${file}`)];
+};
+console.log(`-> Loaded commands...`);
+readdirSync('./commands/').forEach(dirs => {
+    const commands = readdirSync(`./commands/${dirs}`).filter(files => files.endsWith('.js'));
+    for (const file of commands) {
+        const command = require(`./commands/${dirs}/${file}`);
+        console.log(`${command.name.toLowerCase()} Load Command!`);
+        client.commands.set(command.name.toLowerCase(), command);
+        delete require.cache[require.resolve(`./commands/${dirs}/${file}`)];
+    };
 });
 
-fs.readdir("./events", (_err, files) => {
-  files.forEach((file) => {
-      if (!file.endsWith(".js")) return;
-      const event = require(`./events/${file}`);
-      let eventName = file.split(".")[0];
-      console.log(`👌 Loadded Event: ${eventName}`);
-      client.on(eventName, event.bind(null, client));
-      delete require.cache[require.resolve(`./events/${file}`)];
-  });
+player.on('error', (queue, error) => {
+    console.log(`There was a problem with the song queue => ${error.message}`);
 });
 
+player.on('connectionError', (queue, error) => {
+    console.log(`I'm having trouble connecting => ${error.message}`);
+});
 
 player.on('trackStart', (queue, track) => {
     if (!client.config.opt.loopMessage && queue.repeatMode !== 0) return;
-    queue.metadata.send({ content: `🎵 Music started playing: **${track.title}** -> Channel: **${queue.connection.channel.name}** 🎧` }).catch(e => { })
+    queue.metadata.send(`🎵 Music started playing: **${track.title}** -> Channel: **${queue.connection.channel.name}** 🎧`);
 });
 
 player.on('trackAdd', (queue, track) => {
-    queue.metadata.send({ content: `**${track.title}** added to playlist. ✅` }).catch(e => { })
+    queue.metadata.send(`**${track.title}** added to playlist. ✅`);
+});
+
+player.on('botDisconnect', (queue) => {
+    queue.metadata.send('Someone from the audio channel Im connected to kicked me out, the whole playlist has been cleared! ❌');
 });
 
 player.on('channelEmpty', (queue) => {
-    queue.metadata.send({ content: 'I left the audio channel because there is no one on my audio channel. ❌' }).catch(e => { })
+    queue.metadata.send('I left the audio channel because there is no one on my audio channel. ❌');
 });
 
 player.on('queueEnd', (queue) => {
-    if(client.config.opt.voiceConfig.leaveOnTimer.status === true) {
-        setTimeout(() => {
-            if(queue.connection) queue.connection.disconnect();
-        }, client.config.opt.voiceConfig.leaveOnTimer.time);
-    }
-    queue.metadata.send({ content: 'All play queue finished, I think you can listen to some more music. ✅' }).catch(e => { })
+    queue.metadata.send('All play queue finished, I think you can listen to some more music. ✅');
 });
+
 
 
 if(client.config.TOKEN){
@@ -94,9 +73,3 @@ console.log("The Bot Token You Entered Into Your Project Is Incorrect Or Your Bo
 } else {
 console.log("Please Write Your Bot Token Opposite The Token In The config.js File In Your Project!")
 }
-
-setTimeout(() => {
-if(client.db.all()){
-    client.db.deleteAll()
-    }
-}, 5000)

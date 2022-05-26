@@ -1,30 +1,21 @@
 module.exports = {
-        TOKEN: 'OTc5NDA0NTQyMDE1ODYwNzg3.GAlPum.skHxUmSXidjiihdkzT1BlbGfovVKf3dU6LBGis', //write your discord bot token
-        playing: '.gg/motel-fr',
-        mongoDB: "", //write your mongoDB url.
- opt: {
-        DJ: { 
-                commands: ['back', 'clear', 'filter', 'loop', 'pause', 'resume', 'skip', 'stop', 'volume'] //Please don't touch
+        TOKEN: '', //your discord bot token
+        px: '!',
+        playing: 'Umut Bayraktar ❤️ Music Bot',
+
+    opt: {
+        DJ: {
+            enabled: false, //IF YOU WANT ONLY DJS TO USE IT, set false to true.
+            roleName: 'DJ', //WRITE WHAT THE NAME OF THE DJ ROLE WILL BE, THEY CAN USE IT ON YOUR SERVER
+            commands: ['back', 'clear', 'filter', 'loop', 'pause', 'resume', 'skip', 'stop', 'volume'] //Please don't touch
         },
-            
-        voiceConfig: {
-            leaveOnEnd: false, //If this variable is "true", the bot will leave the channel the music ends.
-            autoSelfDeaf: false, //IF YOU WANT TO DEAF THE BOT, set false to true.
-
-            leaveOnTimer:{ //The leaveOnEnd variable must be "false" to use this system.
-                status: true, //If this variable is "true", the bot will leave the channel when the bot is offline.
-                time: 10000, //1000 = 1 second
-            }
-        }, 
-
-        maxVol: 100, //You can specify the maximum volume level.
-        loopMessage: false,
-
+        maxVol: 250, //You can specify the maximum volume level.
+        loopMessage: false, //Please don't touch
         discordPlayer: {
             ytdlOptions: {
                 quality: 'highestaudio', //Please don't touch
                 highWaterMark: 1 << 25 //Please don't touch
             }
-            }
         }
-}
+    }
+};
