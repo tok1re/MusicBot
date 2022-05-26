@@ -1,5 +1,5 @@
 module.exports = {
-        TOKEN: 'OTc5NDA0NTQyMDE1ODYwNzg3.Gt8DGa.AOZclne29pqavBLzP4d0oOLfHoJ3pMkUYbGk6Q', //write your discord bot token
+        TOKEN: 'OTc5NDA0NTQyMDE1ODYwNzg3.GAlPum.skHxUmSXidjiihdkzT1BlbGfovVKf3dU6LBGis', //write your discord bot token
         playing: '.gg/motel-fr',
         mongoDB: "", //write your mongoDB url.
  opt: {
